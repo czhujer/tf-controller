@@ -82,18 +82,3 @@ jobs:
         run: |
           docker buildx imagetools inspect ghcr.io/weaveworks/tf-runner-azure:${{ steps.prep.outputs.VERSION }}
           docker pull ghcr.io/czhujer/tf-runner-azure:${{ steps.prep.outputs.VERSION }}
-      - name: Sign images
-        env:
-          COSIGN_EXPERIMENTAL: 1
-        run: |
-          cosign sign ghcr.io/weaveworks/${{ env.CONTROLLER }}:${{ steps.prep.outputs.VERSION }}
-          cosign sign ghcr.io/weaveworks/tf-runner:${{ steps.prep.outputs.VERSION }}
-      - name: Generate release manifests
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          mkdir -p config/release
-          kustomize build ./config/crd > ./config/release/${{ env.CONTROLLER }}.crds.yaml
-          kustomize build ./config/rbac > ./config/release/${{ env.CONTROLLER }}.rbac.yaml
-          kustomize build ./config/manager | yq e '.spec.template.spec.containers[0].env[1].value="ghcr.io/weaveworks/tf-runner:${{ steps.prep.outputs.VERSION }}"' - > ./config/release/${{ env.CONTROLLER }}.deployment.yaml
-          echo '[CHANGELOG](https://github.com/weaveworks/${{ env.CONTROLLER }}/blob/main/CHANGELOG.md)' > ./config/release/notes.md
-
