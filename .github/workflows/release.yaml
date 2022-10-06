@@ -59,44 +59,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-#      - name: Publish multi-arch tf-controller container image
-#        uses: docker/build-push-action@v2
-#        with:
-#          push: true
-#          no-cache: true
-#          builder: ${{ steps.buildx.outputs.name }}
-#          context: .
-#          file: ./Dockerfile
-#          platforms: linux/amd64 #,linux/arm/v7,linux/arm64
-#          tags: |
-#            ghcr.io/weaveworks/${{ env.CONTROLLER }}:${{ steps.prep.outputs.VERSION }}
-#            ghcr.io/weaveworks/${{ env.CONTROLLER }}:latest
-#          labels: |
-#            org.opencontainers.image.title=${{ github.event.repository.name }}
-#            org.opencontainers.image.description=${{ github.event.repository.description }}
-#            org.opencontainers.image.url=${{ github.event.repository.html_url }}
-#            org.opencontainers.image.revision=${{ github.sha }}
-#            org.opencontainers.image.version=${{ steps.prep.outputs.VERSION }}
-#            org.opencontainers.image.created=${{ steps.prep.outputs.BUILD_DATE }}
-#      - name: Publish multi-arch tf-runner container image
-#        uses: docker/build-push-action@v2
-#        with:
-#          push: true
-#          no-cache: true
-#          builder: ${{ steps.buildx.outputs.name }}
-#          context: .
-#          file: ./runner.Dockerfile
-#          platforms: linux/amd64 #,linux/arm/v7,linux/arm64
-#          tags: |
-#            ghcr.io/weaveworks/tf-runner:${{ steps.prep.outputs.VERSION }}
-#            ghcr.io/weaveworks/tf-runner:latest
-#          labels: |
-#            org.opencontainers.image.title=${{ github.event.repository.name }}
-#            org.opencontainers.image.description=${{ github.event.repository.description }}
-#            org.opencontainers.image.url=${{ github.event.repository.html_url }}
-#            org.opencontainers.image.revision=${{ github.sha }}
-#            org.opencontainers.image.version=${{ steps.prep.outputs.VERSION }}
-#            org.opencontainers.image.created=${{ steps.prep.outputs.BUILD_DATE }}
       - name: Publish multi-arch tf-runner-azure container image
         uses: docker/build-push-action@v2
         with:
@@ -118,12 +80,6 @@ jobs:
             org.opencontainers.image.created=${{ steps.prep.outputs.BUILD_DATE }}
       - name: Check images
         run: |
-#          docker buildx imagetools inspect ghcr.io/weaveworks/${{ env.CONTROLLER }}:${{ steps.prep.outputs.VERSION }}
-#          docker pull ghcr.io/weaveworks/${{ env.CONTROLLER }}:${{ steps.prep.outputs.VERSION }}
-#
-#          docker buildx imagetools inspect ghcr.io/weaveworks/tf-runner:${{ steps.prep.outputs.VERSION }}
-#          docker pull ghcr.io/weaveworks/tf-runner:${{ steps.prep.outputs.VERSION }}
-
           docker buildx imagetools inspect ghcr.io/weaveworks/tf-runner-azure:${{ steps.prep.outputs.VERSION }}
           docker pull ghcr.io/czhujer/tf-runner-azure:${{ steps.prep.outputs.VERSION }}
       - name: Sign images
@@ -140,16 +96,4 @@ jobs:
           kustomize build ./config/rbac > ./config/release/${{ env.CONTROLLER }}.rbac.yaml
           kustomize build ./config/manager | yq e '.spec.template.spec.containers[0].env[1].value="ghcr.io/weaveworks/tf-runner:${{ steps.prep.outputs.VERSION }}"' - > ./config/release/${{ env.CONTROLLER }}.deployment.yaml
           echo '[CHANGELOG](https://github.com/weaveworks/${{ env.CONTROLLER }}/blob/main/CHANGELOG.md)' > ./config/release/notes.md
-      - name: Create release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: release --release-notes=./config/release/notes.md --skip-validate
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.TF_CONTROLLER_WEAVEWORKSBOT }}
-      - name: Publish Helm chart
-        uses: stefanprodan/helm-gh-pages@v1.4.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+
